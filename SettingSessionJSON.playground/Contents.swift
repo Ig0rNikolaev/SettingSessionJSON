@@ -49,8 +49,8 @@ class RequestJSON {
             Конвертированная стоимость маны: \(card.cmc ?? 0)
             Тип карты: \(card.type ?? " ")
             Редкость карты: \(card.rarity ?? " ")
-            Набор к которому принадлежит карта (заданный код): \(card.set ?? " ")
-            Набор к которому принадлежит карта: \(card.setName ?? " ")
+            Набор к картe (заданный код): \(card.set ?? " ")
+            Набор к карте: \(card.setName ?? " ")
             Исполнитель: \(card.artist ?? " ")\n
             """
         print(cardPrint)
@@ -58,6 +58,7 @@ class RequestJSON {
 
     func getData(urlRequest: URL?) {
         guard let url = urlRequest else { return }
+        print("Ожидание ответа с сервера..\n")
         URLSession.shared.dataTask(with: url) { data, response, error in
             if error != nil {
                 print("Ошибка при запросе: \(String(describing: error?.localizedDescription))")
