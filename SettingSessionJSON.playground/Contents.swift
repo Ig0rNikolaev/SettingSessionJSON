@@ -39,18 +39,19 @@ class RequestJSON {
 
     func printCardInfo(_ cards: Cards) {
         guard let card = cards.cards.first else {
-            print("Не найдено: 404. Запрошенный ресурс не найден")
+            print(Errors.notFound.rawValue)
             return
         }
         let cardPrint = """
+            Данные JSON:\n
             Имя карты: \(card.name ?? " ")
             Стоимость маны: \(card.manaCost ?? " ")
             Конвертированная стоимость маны: \(card.cmc ?? 0)
             Тип карты: \(card.type ?? " ")
             Редкость карты: \(card.rarity ?? " ")
-            Набор, к которому принадлежит карта (заданный код): \(card.set ?? " ")
-            Набор, к которому принадлежит карта: \(card.setName ?? " ")
-            Исполнитель: \(card.artist ?? " ")
+            Набор к которому принадлежит карта (заданный код): \(card.set ?? " ")
+            Набор к которому принадлежит карта: \(card.setName ?? " ")
+            Исполнитель: \(card.artist ?? " ")\n
             """
         print(cardPrint)
     }
@@ -61,8 +62,9 @@ class RequestJSON {
             if error != nil {
                 print("Ошибка при запросе: \(String(describing: error?.localizedDescription))")
             }
-
-            guard let response = response as? HTTPURLResponse else { return }
+            guard let response = response as? HTTPURLResponse else {
+                print("Ошибка при запросе: \(String(describing: error?.localizedDescription))")
+                return }
 
             switch response.statusCode {
             case 100...103:
@@ -78,15 +80,15 @@ class RequestJSON {
             case 300...399:
                 print("Сообщение о перенаправлении: \(response.statusCode)")
             case 400:
-                print("\(Errors.badRequest). Ошибка: \(response.statusCode)")
+                print("\(Errors.badRequest.rawValue). Ошибка: \(response.statusCode)")
             case 403:
-                print("\(Errors.forbidden). Ошибка: \(response.statusCode)")
+                print("\(Errors.forbidden.rawValue). Ошибка: \(response.statusCode)")
             case 404:
-                print("\(Errors.notFound). Ошибка: \(response.statusCode)")
+                print("\(Errors.notFound.rawValue). Ошибка: \(response.statusCode)")
             case 500:
-                print("\(Errors.internalServerError). Ошибка: \(response.statusCode)")
+                print("\(Errors.internalServerError.rawValue). Ошибка: \(response.statusCode)")
             case 503:
-                print("\(Errors.serviceUnavailable). Ошибка: \(response.statusCode)")
+                print("\(Errors.serviceUnavailable.rawValue). Ошибка: \(response.statusCode)")
             default:
                 break
             }
@@ -97,14 +99,9 @@ class RequestJSON {
 let сreatureURL = CreatureURL()
 let requestJSON = RequestJSON()
 
-let urlLotus = сreatureURL.buildURL(scheme: "https", host: "api.magicthegathering.io", path: "/v1/cards", value: "Black+Lotus")
 let urlOpt = сreatureURL.buildURL(scheme: "https", host: "api.magicthegathering.io", path: "/v1/cards", value: "Opt")
-
-requestJSON.getData(urlRequest: urlLotus)
 requestJSON.getData(urlRequest: urlOpt)
 
-
-
-
-
+let urlLotus = сreatureURL.buildURL(scheme: "https", host: "api.magicthegathering.io", path: "/v1/cards", value: "Black+Lotus")
+requestJSON.getData(urlRequest: urlLotus)
 
