@@ -16,8 +16,7 @@ struct Card: Decodable {
 }
 
 class CreatureURL {
-
-    func buildURL(scheme: String, host: String, path: String, value: String) -> URL? {
+    func buildURL(scheme: String, host: String, path: String, value: String?) -> URL? {
         var components = URLComponents()
         components.scheme = scheme
         components.host = host
@@ -28,8 +27,7 @@ class CreatureURL {
 }
 
 class RequestJSON {
-
-    enum Errors: String, Error {
+    enum NetworkError: String, Error {
         case badRequest = "Плохой запрос: Мы не смогли обработать это действие"
         case forbidden = "Запрещено: Вы превысили лимит скорости"
         case notFound = "Не найдено: Запрошенный ресурс не найден"
@@ -37,23 +35,22 @@ class RequestJSON {
         case serviceUnavailable = "Сервис недоступен: Мы временно не в сети для технического обслуживания. Пожалуйста, повторите попытку позже"
     }
 
-    func printCardInfo(_ cards: Cards) {
-        guard let card = cards.cards.first else {
-            print(Errors.notFound.rawValue)
-            return
+    func printCardInfo(_ cardsJSON: Cards) {
+        cardsJSON.cards.forEach() {
+            if $0.name == "Ornithopter" || $0.name == "Black Lotus" {
+                let cardPrint = """
+                        DATA |JSON| \($0.type ?? " "): -------------->\n
+                        |  Имя карты:                        |  \($0.name ?? " ")
+                        |  Стоимость маны:                   |  \($0.manaCost ?? " ")
+                        |  Конвертированная стоимость маны:  |  \($0.cmc ?? 0)
+                        |  Редкость карты:                   |  \($0.rarity ?? " ")
+                        |  Набор к картe (заданный код):     |  \($0.set ?? " ")
+                        |  Набор к карте:                    |  \($0.setName ?? " ")
+                        |  Исполнитель:                      |  \($0.artist ?? " ")\n
+                        """
+                print(cardPrint)
+            }
         }
-        let cardPrint = """
-            Данные JSON:\n
-            Имя карты: \(card.name ?? " ")
-            Стоимость маны: \(card.manaCost ?? " ")
-            Конвертированная стоимость маны: \(card.cmc ?? 0)
-            Тип карты: \(card.type ?? " ")
-            Редкость карты: \(card.rarity ?? " ")
-            Набор к картe (заданный код): \(card.set ?? " ")
-            Набор к карте: \(card.setName ?? " ")
-            Исполнитель: \(card.artist ?? " ")\n
-            """
-        print(cardPrint)
     }
 
     func getData(urlRequest: URL?) {
@@ -72,7 +69,10 @@ class RequestJSON {
                 print("Информационный код: \(response.statusCode)")
             case 200...299:
                 do {
-                    guard let data = data else { return }
+                    guard let data = data else {
+                        print("Ошибка запроса данных")
+                        return
+                    }
                     let cards = try JSONDecoder().decode(Cards.self, from: data)
                     self.printCardInfo(cards)
                 } catch {
@@ -81,15 +81,15 @@ class RequestJSON {
             case 300...399:
                 print("Сообщение о перенаправлении: \(response.statusCode)")
             case 400:
-                print("\(Errors.badRequest.rawValue). Ошибка: \(response.statusCode)")
+                print("\(NetworkError.badRequest.rawValue). Ошибка: \(response.statusCode)")
             case 403:
-                print("\(Errors.forbidden.rawValue). Ошибка: \(response.statusCode)")
+                print("\(NetworkError.forbidden.rawValue). Ошибка: \(response.statusCode)")
             case 404:
-                print("\(Errors.notFound.rawValue). Ошибка: \(response.statusCode)")
+                print("\(NetworkError.notFound.rawValue). Ошибка: \(response.statusCode)")
             case 500:
-                print("\(Errors.internalServerError.rawValue). Ошибка: \(response.statusCode)")
+                print("\(NetworkError.internalServerError.rawValue). Ошибка: \(response.statusCode)")
             case 503:
-                print("\(Errors.serviceUnavailable.rawValue). Ошибка: \(response.statusCode)")
+                print("\(NetworkError.serviceUnavailable.rawValue). Ошибка: \(response.statusCode)")
             default:
                 break
             }
@@ -99,10 +99,14 @@ class RequestJSON {
 
 let сreatureURL = CreatureURL()
 let requestJSON = RequestJSON()
+let url = сreatureURL.buildURL(scheme: "https",
+                               host: "api.magicthegathering.io",
+                               path: "/v1/cards",
+                               value: "Black+Lotus|Ornithopter")
+requestJSON.getData(urlRequest: url)
 
-let urlOpt = сreatureURL.buildURL(scheme: "https", host: "api.magicthegathering.io", path: "/v1/cards", value: "Opt")
-requestJSON.getData(urlRequest: urlOpt)
-
-let urlLotus = сreatureURL.buildURL(scheme: "https", host: "api.magicthegathering.io", path: "/v1/cards", value: "Black+Lotus")
-requestJSON.getData(urlRequest: urlLotus)
-
+extension String {
+    static func | (lhs: String, rhs: String) -> String {
+        return lhs + "|" + rhs
+    }
+}
